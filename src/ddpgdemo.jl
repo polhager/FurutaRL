@@ -8,6 +8,8 @@ using LinearAlgebra
 
 export DDPGPolicyDemo, update_critic!
 
+#This is a modified version of JuliaReinforcementLearning's ddpg policy. It has been adapted to handle all the various training scenarios used during the project.
+
 mutable struct DDPGPolicyDemo{
     BA<:NeuralNetworkApproximator,
     BC<:NeuralNetworkApproximator,
