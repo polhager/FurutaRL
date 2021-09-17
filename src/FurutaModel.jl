@@ -85,8 +85,8 @@ function step!(env::FurutaEnv, u)
 
     θ, θ̇, ϕ, ϕ̇ = env.state
 
-    if abs(ϕ̇ ) > 0.1 #0.0083*sign(phidot) - 0.0005*phidot ?
-        u = u - par.tau_C*sign(ϕ̇ ) #+ 0.0005*ϕ̇
+    if abs(ϕ̇ ) > 0.1
+        u = u - par.tau_C*sign(ϕ̇ )
     elseif abs(u) < par.tau_S
         u = 0
     else
@@ -100,31 +100,13 @@ function step!(env::FurutaEnv, u)
     h = par.dt / steps
     y = env.state
 
-    for i in 1:steps
-
-        #RK4
-    #     k1 = _f(env, y, u)
-    #     k2 = _f(env, y + h*k1/2, u)
-    #     k3 = _f(env, y + h*k2/2, u)
-    #     k4 = _f(env, y + h*k3, u)
-    #     y += h*(k1/6 + k2/3 + k3/3 + k4/6)
-
+    for i in 1:steps   
         #RK3/8
         k1 = _f(env, y, u)
         k2 = _f(env, y + h .* k1 ./ 3, u)
         k3 = _f(env, y + h .* (-k1 ./ 3 + k2), u)
         k4 = _f(env, y + h .* (k1 - k2 + k3), u)
         y = y .+ h .* (k1 ./ 8 + 3 .* k2 ./ 8 + 3 .*k3 ./ 8 + k4 ./ 8)
-
-        #Heun
-    #     k1 = _f(env, y, u)
-    #     k2 = _f(env, y + h*k1, u)
-    #     y += h/2*(k1 + k2)
-    #     θ, θ̇, ϕ, ϕ̇ = y
-
-        #Explicit Euler
-    #     k1 = _f(env, y, u)
-    #     y += h*k1
     end
 
     θ, θ̇, ϕ, ϕ̇ = y
@@ -169,18 +151,10 @@ function _get_obs(env::FurutaEnv)
     return vcat(sin.(θ), cos.(θ), θ̇ , ϕ, ϕ̇ )
 end
 
-#angle_normalize(x) = ((x + pi) % 2*pi + 2*pi) % 2*pi - pi
 angle_normalize(x) = Base.mod((x + Base.π), (2 * Base.π)) - Base.π
-#angle_normalize(x) = x % 2*π - ((x % 2*π) > π)*2*π
-
 
 function _reward(env::FurutaEnv, u)
     θ, θ̇, ϕ, ϕ̇ = env.state
-    # r = -(5*angle_normalize(θ)^2 + 0.05*θ̇ ^2 + ϕ^2 + 0.05*ϕ̇ ^2 + 0.05*u^2) - 1000*(abs(ϕ) > 2*π)
-    #      + 5*(abs(angle_normalize(θ)) < 0.01 && abs(θ̇ ) < 0.1)
-    #done = false
-    # r = -(5*angle_normalize(θ)^2 + 0.05*θ̇ ^2 + ϕ^2 + 0.05*ϕ̇ ^2 + 0.05*u^2) - 1000*(abs(ϕ) > 2*π)
-    #      + 1000*(abs(angle_normalize(θ)) < 0.05 && abs(θ̇ ) < 0.5)
     r = -(5*angle_normalize(θ)^2 + 0.05*θ̇ ^2 + ϕ^2 + 0.05*ϕ̇ ^2 + 0.05*u^2) - 10000*(abs(ϕ) > 2*π)
     done = (abs(ϕ) > 2*π) #|| (abs(angle_normalize(θ)) < 0.05 && abs(θ̇ ) < 0.5)
     return r, done
