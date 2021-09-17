@@ -5,7 +5,6 @@ using Random, Distributions
 using Setfield: @set
 using Zygote: ignore
 using LinearAlgebra
-#include("RLCore_extensions.jl")
 
 export DDPGPolicyDemo, update_critic!
 
@@ -111,7 +110,6 @@ function DDPGPolicyDemo(;
     )
 end
 
-# TODO: handle Training/Testing mode
 function (p::DDPGPolicyDemo)(env::AbstractEnv; training = true)
     p.step += 1
 
@@ -160,10 +158,6 @@ end
 function RLBase.update!(p::DDPGPolicyDemo, traj::CircularArraySARTSTrajectory)
     length(traj) > p.update_after || return
     p.step % p.update_every == 0 || return
-    # for _ in 1:10
-    #     inds, batch = sample(p.rng, traj, BatchSampler{SARTS}(p.batch_size))
-    #     _update_critic(p, batch)
-    # end
     inds, batch = sample(p.rng, traj, BatchSampler{SARTS}(p.batch_size))
     update!(p, batch)
 end
@@ -192,10 +186,6 @@ function RLBase.update!(p::DDPGPolicyDemo, batch::NamedTuple{SARTS})
     γ = p.γ
     ρ = p.ρ
 
-
-    # !!! we have several assumptions here, need revisit when we have more complex environments
-    # state is vector
-    # action is scalar
     a′ = Aₜ(s′)
     qₜ = Cₜ(vcat(s′, a′)) |> vec
     y = r .+ γ .* (1 .- t) .* qₜ
@@ -239,10 +229,6 @@ function RLBase.update!(p::DDPGPolicyDemo, batch::NamedTuple{SARTS}, ::PreTrainS
     γ = p.γ
     ρ = p.ρ
 
-
-    # !!! we have several assumptions here, need revisit when we have more complex environments
-    # state is vector
-    # action is scalar
     a′ = Aₜ(s′)
     qₜ = Cₜ(vcat(s′, a′)) |> vec
     y = r .+ γ .* (1 .- t) .* qₜ
@@ -261,7 +247,6 @@ function RLBase.update!(p::DDPGPolicyDemo, batch::NamedTuple{SARTS}, ::PreTrainS
 
     gs2 = gradient(Flux.params(A)) do
         loss = -mean(C(vcat(s, A(s)))) + 1/2*mean((A(s) .- a) .^ 2) + sum(norm, Flux.params(A))/4
-        #loss = mean((A(s) .- a) .^ 2)
         ignore() do
             p.actor_loss = loss
         end
@@ -280,12 +265,6 @@ function RLBase.update!(p::DDPGPolicyDemo, batch::NamedTuple{SARTS}, demo_batch:
     s, a, r, t, s′ = send_to_device(device(p), batch)
     sᵈ, aᵈ, rᵈ, tᵈ, s′ᵈ = send_to_device(device(p), demo_batch)
 
-    # s = hcat(s,sᵈ)
-    # a = vcat(a,aᵈ)
-    # r = vcat(r,rᵈ)
-    # t = vcat(t,tᵈ)
-    # s′ = hcat(s′,s′ᵈ)
-
     A = p.behavior_actor
     C = p.behavior_critic
     Aₜ = p.target_actor
@@ -294,10 +273,6 @@ function RLBase.update!(p::DDPGPolicyDemo, batch::NamedTuple{SARTS}, demo_batch:
     γ = p.γ
     ρ = p.ρ
 
-
-    # !!! we have several assumptions here, need revisit when we have more complex environments
-    # state is vector
-    # action is scalar
     a′ = Aₜ(s′)
     qₜ = Cₜ(vcat(s′, a′)) |> vec
     y = r .+ γ .* (1 .- t) .* qₜ
