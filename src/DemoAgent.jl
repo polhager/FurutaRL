@@ -3,7 +3,6 @@ export DemoAgent, action
 using ReinforcementLearning
 import Functors: functor
 using Setfield: @set
-#include("RLCore_extensions.jl")
 
 Base.@kwdef struct DemoAgent{P<:AbstractPolicy, T<:AbstractTrajectory} <: AbstractPolicy
     policy::P
@@ -18,9 +17,7 @@ functor(x::DemoAgent) = (policy = x.policy,), y -> @set x.policy = y.policy
 function check(agent::DemoAgent, env::AbstractEnv)
     if ActionStyle(env) === FULL_ACTION_SET &&
         !haskey(agent.trajectory, :legal_actions_mask)
-        #     @warn "The env[$(nameof(env))] is of FULL_ACTION_SET, but I can not find a trace named :legal_actions_mask in the trajectory"
         !haskey(agent.demo_trajectory, :legal_actions_mask)
-        #     @warn "The env[$(nameof(env))] is of FULL_ACTION_SET, but I can not find a trace named :legal_actions_mask in the demo_trajectory"
     end
     check(agent.policy, env)
 end
@@ -97,16 +94,6 @@ function (agent::DemoAgent)(stage::PreTrainStage, env::AbstractEnv)
     update!(agent.policy, agent.demo_trajectory, env, stage)
 end
 
-
-
-
-# function RLBase.update!(
-#     ::AbstractPolicy,
-#     ::AbstractTrajectory,
-#     ::AbstractEnv,
-#     ::AbstractStage,
-# ) end
-
 function RLBase.update!(
     ::AbstractPolicy,
     ::AbstractTrajectory,
@@ -128,13 +115,6 @@ function RLBase.update!(
 # Default behaviors for known trajectories
 #####
 
-# function RLBase.update!(
-#     ::AbstractTrajectory,
-#     ::AbstractPolicy,
-#     ::AbstractEnv,
-#     ::AbstractStage,
-# ) end
-
 function RLBase.update!(
     ::AbstractTrajectory,
     ::AbstractPolicy,
@@ -142,73 +122,6 @@ function RLBase.update!(
     ::AbstractStage,
     ::AbstractStage,
 ) end
-
-# function RLBase.update!(
-#     trajectory::AbstractTrajectory,
-#     ::AbstractPolicy,
-#     ::AbstractEnv,
-#     ::PreEpisodeStage,
-# )
-#     if length(trajectory) > 0
-#         pop!(trajectory[:state])
-#         pop!(trajectory[:action])
-#         if haskey(trajectory, :legal_actions_mask)
-#             pop!(trajectory[:legal_actions_mask])
-#         end
-#     end
-# end
-
-# function RLBase.update!(
-#     trajectory::AbstractTrajectory,
-#     policy::AbstractPolicy,
-#     env::AbstractEnv,
-#     ::PreActStage,
-#     action,
-# )
-#     s = policy isa NamedPolicy ? state(env, nameof(policy)) : state(env)
-#     push!(trajectory[:state], s)
-#     push!(trajectory[:action], action)
-#     if haskey(trajectory, :legal_actions_mask)
-#         lasm = policy isa NamedPolicy ? legal_action_space_mask(env, nameof(policy)) : legal_action_space_mask(env)
-#         push!(trajectory[:legal_actions_mask], lasm)
-#     end
-# end
-
-# function RLBase.update!(
-#     trajectory::AbstractTrajectory,
-#     policy::AbstractPolicy,
-#     env::AbstractEnv,
-#     ::PostEpisodeStage,
-# )
-#     # Note that for trajectories like `CircularArraySARTTrajectory`, data are
-#     # stored in a SARSA format, which means we still need to generate a dummy
-#     # action at the end of an episode. Here we simply select a random one using
-#     # the global rng. In theory it shouldn't affect the performance of specific
-#     # algorithm.
-#     # TODO: how to inject a local rng here to avoid polluting the global rng
-#     action = rand(action_space(env))
-#
-#     s = policy isa NamedPolicy ? state(env, nameof(policy)) : state(env)
-#     push!(trajectory[:state], s)
-#     push!(trajectory[:action], action)
-#     if haskey(trajectory, :legal_actions_mask)
-#         lasm = policy isa NamedPolicy ? legal_action_space_mask(env, nameof(policy)) : legal_action_space_mask(env)
-#         push!(trajectory[:legal_actions_mask], lasm)
-#     end
-# end
-
-# function RLBase.update!(
-#     trajectory::AbstractTrajectory,
-#     policy::AbstractPolicy,
-#     env::AbstractEnv,
-#     ::PostActStage,
-# )
-#     r = policy isa NamedPolicy ? reward(env, nameof(policy)) : reward(env)
-#     push!(trajectory[:reward], r)
-#     push!(trajectory[:terminal], is_terminated(env))
-# end
-
-
 
 function RLBase.update!(
     trajectory::AbstractTrajectory,
