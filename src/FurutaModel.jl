@@ -3,6 +3,8 @@ using ReinforcementLearning
 using Random
 using IntervalSets
 
+#Model of the Furuta pendulum, adapted from JuliaReinforcementLearning's pendulum model.
+
 struct FurutaEnvParams{T}
     max_speed::T
     max_torque::T
