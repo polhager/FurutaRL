@@ -10,6 +10,8 @@ using StatsBase
 using CircularArrayBuffers
 using Random
 
+#A few extensions to JuliaReinforcementLearningCore that were useful
+
 const CircularArraySARTSTrajectory = Trajectory{
     <:NamedTuple{
         SARTS,
