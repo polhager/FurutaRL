@@ -7,6 +7,8 @@ struct FurutaPolicy{S} <: AbstractPolicy
     action_space::S
 end
 
+#Classical controller for the Furuta pendulum.
+
 function FurutaPolicy(;s=nothing)
     FurutaPolicy(s)
 end
