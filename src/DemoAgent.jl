@@ -4,6 +4,8 @@ using ReinforcementLearning
 import Functors: functor
 using Setfield: @set
 
+#This is an extended version of JuliaReinforcementLearning's Agent type. This one can take two trajectories in order to handle expert demonstrations.
+
 Base.@kwdef struct DemoAgent{P<:AbstractPolicy, T<:AbstractTrajectory} <: AbstractPolicy
     policy::P
     trajectory::T
